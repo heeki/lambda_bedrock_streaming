@@ -75,8 +75,7 @@ Resources:
       Handler: fn.handler
       Role: !GetAtt FnRole.Arn
       FunctionUrlConfig:
-        # AuthType: AWS_IAM
-        AuthType: NONE
+        AuthType: AWS_IAM
         InvokeMode: RESPONSE_STREAM
       Environment:
         Variables:

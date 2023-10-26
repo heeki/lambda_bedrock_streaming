@@ -15,9 +15,19 @@ lambda.invoke.sync:
 lambda.invoke.async:
 	aws --profile ${PROFILE} lambda invoke --function-name ${O_FN} --invocation-type Event --payload file://etc/event.json --cli-binary-format raw-in-base64-out --log-type Tail tmp/fn.json | jq "."
 
+iam.assumerole:
+	aws --profile ${PROFILE} sts assume-role --role-arn ${O_CLIENT_ROLE} --role-session-name furl | tee tmp/credentials.json | jq
+
 curl:
 	curl -s -XPOST -d @etc/payload.json ${O_FURL} --no-buffer
 curl.compressed:
 	curl -s -XPOST -d @etc/payload.json ${O_FURL} --no-buffer --compressed
 curl.auth:
-	curl -s -XPOST -d @etc/payload.json ${O_FURL} --user "${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY}"" --aws-sigv4 "aws:amz:${REGION}:lambda" --no-buffer
+	curl -s -XPOST -d @etc/payload.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+
+get.configuration:
+	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq
+get.furl:
+	aws --profile ${PROFILE} lambda get-function-url-config --function-name ${O_FN} | jq
+get.policy:
+	aws --profile ${PROFILE} lambda get-policy --function-name ${O_FN} | jq

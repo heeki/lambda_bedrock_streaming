@@ -1,6 +1,7 @@
 # directories
 .vscode
 node_modules
+tmp
 
 # files
 etc/event.json
