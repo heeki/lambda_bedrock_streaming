@@ -33,3 +33,9 @@ get.furl:
 	aws --profile ${PROFILE} lambda get-function-url-config --function-name ${O_FN} | jq
 get.policy:
 	aws --profile ${PROFILE} lambda get-policy --function-name ${O_FN} | jq
+
+test:
+	node src/test.mjs
+
+list.foundation-models:
+	aws --profile ${PROFILE} bedrock list-foundation-models | jq -r -c '.modelSummaries[] | select(.responseStreamingSupported == true) | .modelArn'

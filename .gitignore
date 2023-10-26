@@ -4,6 +4,7 @@ node_modules
 tmp
 
 # files
+etc/bedrock_*.json
 etc/event.json
 etc/*.sh
 iac/*_output.yaml

@@ -6,6 +6,7 @@
   "main": "fn.mjs",
   "author": "heeki",
   "dependencies": {
+    "@anthropic-ai/bedrock-sdk": "^0.3.0",
     "@aws-sdk/client-bedrock-runtime": "^3.436.0"
   }
 }

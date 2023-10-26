@@ -67,6 +67,7 @@ Resources:
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
                 Resource: !Sub arn:aws:bedrock:${AWS::Region}::foundation-model/*
   Fn:
     Type: AWS::Serverless::Function

@@ -1,8 +1,9 @@
 {
     "body": {
         "max_tokens_to_sample": 2048,
-        "temperature": 0.5,
-        "top_p": 0.5,
+        "temperature": 0.9,
+        "top_k": 250,
+        "top_p": 0.9,
         "prompt": "Explain serverless to a 5th grader."
     },
     "isBase64Encoded": false
