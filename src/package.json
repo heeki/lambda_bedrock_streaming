@@ -1,0 +1,11 @@
+{
+  "name": "bedrock-with-streaming-response",
+  "type": "module",
+  "description": "example lambda function url with bedrock streaming responses",
+  "version": "1.0",
+  "main": "fn.mjs",
+  "author": "heeki",
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.436.0"
+  }
+}

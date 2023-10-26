@@ -7,7 +7,7 @@ lambda.deploy:
 	sam deploy -t ${LAMBDA_OUTPUT} --region ${REGION} --stack-name ${LAMBDA_STACK} --parameter-overrides ${LAMBDA_PARAMS} --capabilities CAPABILITY_NAMED_IAM
 
 lambda.local:
-	sam local invoke -t ${LAMBDA_TEMPLATE} --parameter-overrides ${LAMBDA_PARAMS} --env-vars etc/envvars.json -e etc/event.json Fn | jq
+	sam local invoke -t ${LAMBDA_TEMPLATE} --parameter-overrides ${LAMBDA_PARAMS} --env-vars etc/envvars.json -e etc/local.json Fn | jq
 lambda.invoke.sync:
 	aws --profile ${PROFILE} lambda invoke --function-name ${O_FN} --invocation-type RequestResponse --payload file://etc/event.json --cli-binary-format raw-in-base64-out --log-type Tail tmp/fn.json | jq "." > tmp/response.json
 	cat tmp/response.json | jq -r ".LogResult" | base64 --decode
@@ -19,11 +19,13 @@ iam.assumerole:
 	aws --profile ${PROFILE} sts assume-role --role-arn ${O_CLIENT_ROLE} --role-session-name furl | tee tmp/credentials.json | jq
 
 curl:
-	curl -s -XPOST -d @etc/payload.json ${O_FURL} --no-buffer
+	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --no-buffer
 curl.compressed:
-	curl -s -XPOST -d @etc/payload.json ${O_FURL} --no-buffer --compressed
+	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --no-buffer --compressed
 curl.auth:
-	curl -s -XPOST -d @etc/payload.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+curl.bedrock:
+	curl -s -XPOST -d @etc/bedrock.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 
 get.configuration:
 	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq
