@@ -7,6 +7,6 @@ P_FN_TIMEOUT=30
 LAMBDA_STACK=lambda-bedrock-streaming
 LAMBDA_TEMPLATE=iac/lambda.yaml
 LAMBDA_OUTPUT=iac/lambda_output.yaml
-LAMBDA_PARAMS="ParameterKey=pFnMemory,ParameterValue=${P_FN_MEMORY} ParameterKey=pFnTimeout,ParameterValue=${P_FN_TIMEOUT} ParameterKey=pLangchainLayerArn,ParameterValue=${O_LAYER_ARN}"
+LAMBDA_PARAMS="ParameterKey=pFnMemory,ParameterValue=${P_FN_MEMORY} ParameterKey=pFnTimeout,ParameterValue=${P_FN_TIMEOUT}"
 O_FN=output-fn-id
 O_FURL=output-fn-url
