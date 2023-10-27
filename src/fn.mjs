@@ -5,7 +5,7 @@ import { BedrockRuntimeClient, InvokeModelCommand, InvokeModelWithResponseStream
 
 const { Readable } = stream;
 const pipeline = util.promisify(stream.pipeline);
-const client = new BedrockRuntimeClient({ region: "us-east-1" });
+const bedrock = new BedrockRuntimeClient({ region: "us-east-1" });
 
 // helpers
 function getBody(event) {
@@ -19,7 +19,7 @@ function parseBase64(message) {
 }
 
 function cleanParsed(parsed) {
-    return parsed["completion"].split("\n\n").map(s => s.trim());
+    return parsed.completion.split("\n\n").map(s => s.trim());
 }
 
 // lambda: handle response streaming with a loop
@@ -43,6 +43,7 @@ function getInvokeParams(params, model, streaming) {
     if (model === "anthropic.claude-v2") {
         wrapped.prompt = `\n\nHuman:${params.prompt}Assistant:`;
     }
+
     const output = {
         "modelId": model,
         "contentType": "application/json",
@@ -50,7 +51,7 @@ function getInvokeParams(params, model, streaming) {
         "body": JSON.stringify(wrapped)
     };
     if (streaming) {
-        output.streaming = streaming;
+        output.responseStream = true;
     }
     return output;
 }
@@ -58,63 +59,37 @@ function getInvokeParams(params, model, streaming) {
 // bedrock: helpers
 async function doStreamingWithAnthropicSdk(body, responseStream) {
     const anthropic = new AnthropicBedrock();
-    const stream = await anthropic.completions.create({
+    const response = await anthropic.completions.create({
         prompt: `${AnthropicBedrock.HUMAN_PROMPT} ${body.params.prompt} ${AnthropicBedrock.AI_PROMPT}`,
         model: body.model,
         stream: body.streaming,
         max_tokens_to_sample: body.params.max_tokens_to_sample,
-      });
-      for await (const completion of stream) {
-        responseStream.write(completion.completion);
-      }
-      responseStream.end();
+    });
+    const chunks = [];
+    for await (const chunk of response) {
+        chunks.push(chunk.completion);
+        responseStream.write(chunk.completion);
+    }
+    console.log(chunks.join(''));
+    responseStream.end();
 }
 
-// wip
 async function doStreamingWithAwsSdk(params, responseStream) {
     const command = new InvokeModelWithResponseStreamCommand(params);
-    return new Promise((resolve, reject) => {
-        client.send(command, (err, data) => {
-            if (err) {
-                console.error("failed bedrock.send(): ", err);
-            } else {
-                console.log("data: ", JSON.stringify(data));
-                var stream = data.body.options.messageStream.options.inputStream;
-                stream.on("data", (event) => {
-                    console.log("event: ", JSON.stringify(event));
-                    if (event.chunk) {
-                        let partial = parseBase64(event.chunk.bytes);
-                        console.log(partial);
-                        responseStream.write(partial);
-                    } else if (event.internalServerException) {
-                        console.error("internalServerException");
-                    } else if (event.modelStreamErrorException) {
-                        console.error("modelStreamErrorException");
-                    } else if (event.modelTimeoutException) {
-                        console.error("modelTimeoutException");
-                    } else if (event.throttlingException) {
-                        console.error("throttlingException");
-                    } else if (event.validationException) {
-                        console.error("validationException");
-                    }
-                });
-                stream.on("error", (err) => {
-                    console.error("error: ", JSON.stringify(err));
-                    reject(err);
-                });
-                stream.on("end", () => {
-                    console.log("end");
-                    responseStream.end();
-                    resolve();
-                });
-            }
-        });
-    });
+    const response = await bedrock.send(command);
+    const chunks = [];
+    for await (const chunk of response.body) {
+        const parsed = parseBase64(chunk.chunk.bytes);
+        chunks.push(parsed.completion);
+        responseStream.write(parsed.completion);
+    }
+    console.log(chunks.join(''));
+    responseStream.end();
 }
 
 async function doInvokeWithAwsSdk(params, responseStream) {
     const command = new InvokeModelCommand(params);
-    const response = await client.send(command);
+    const response = await bedrock.send(command);
     const parsed = parseBase64(response.body);
     const output = cleanParsed(parsed);
     console.log(JSON.stringify(output));
@@ -124,9 +99,13 @@ async function doInvokeWithAwsSdk(params, responseStream) {
 // bedrock: invoke model
 async function doBedrock(body, responseStream) {
     const params = getInvokeParams(body.params, body.model, body.streaming);
+    console.log(JSON.stringify(params));
     if (body.streaming) {
-        // await doStreamingWithAwsSdk(params, responseStream);
-        await doStreamingWithAnthropicSdk(body, responseStream);
+        if (body.anthropic) {
+            await doStreamingWithAnthropicSdk(body, responseStream);
+        } else {
+            await doStreamingWithAwsSdk(params, responseStream);
+        }
     } else {
         await doInvokeWithAwsSdk(params, responseStream);
     }

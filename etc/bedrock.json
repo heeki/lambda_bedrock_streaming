@@ -2,11 +2,12 @@
     "handler": "bedrock",
     "model": "anthropic.claude-v2",
     "streaming": true,
+    "anthropic": false,
     "params": {
         "max_tokens_to_sample": 2048,
-        "temperature": 0.9,
+        "temperature": 0.5,
         "top_k": 250,
-        "top_p": 0.9,
+        "top_p": 0.5,
         "prompt": "Explain serverless to a 5th grader."
     }
 }

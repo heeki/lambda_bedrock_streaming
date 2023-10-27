@@ -23,9 +23,9 @@ curl:
 curl.compressed:
 	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --no-buffer --compressed
 curl.auth:
-	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 curl.bedrock:
-	curl -s -XPOST -d @etc/bedrock.json ${O_FURL} --user ${AWS_ACCESS_KEY}:${AWS_SECRET_ACCESS_KEY} --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+	curl -s -XPOST -d @etc/bedrock.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 
 get.configuration:
 	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq
@@ -34,8 +34,5 @@ get.furl:
 get.policy:
 	aws --profile ${PROFILE} lambda get-policy --function-name ${O_FN} | jq
 
-test:
-	node src/test.mjs
-
-list.foundation-models:
+list.models:
 	aws --profile ${PROFILE} bedrock list-foundation-models | jq -r -c '.modelSummaries[] | select(.responseStreamingSupported == true) | .modelArn'
