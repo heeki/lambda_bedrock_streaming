@@ -1,9 +1,15 @@
 {
-    "handler": "bedrock",
-    "model": "anthropic.claude-v2",
-    "streaming": true,
-    "anthropic": false,
-    "params": {
+    "lambdaParams": {
+        "handler": "bedrock",
+        "isStreaming": true,
+        "useAnthropicSdk": false
+    },
+    "bedrockParams": {
+        "modelId": "anthropic.claude-v2",
+        "contentType": "application/json",
+        "accept": "*/*"
+    },
+    "modelParams": {
         "max_tokens_to_sample": 2048,
         "temperature": 0.5,
         "top_k": 250,

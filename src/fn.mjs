@@ -5,6 +5,7 @@ import { BedrockRuntimeClient, InvokeModelCommand, InvokeModelWithResponseStream
 
 const { Readable } = stream;
 const pipeline = util.promisify(stream.pipeline);
+const anthropic = new AnthropicBedrock();
 const bedrock = new BedrockRuntimeClient({ region: "us-east-1" });
 
 // helpers
@@ -18,7 +19,7 @@ function parseBase64(message) {
     return JSON.parse(Buffer.from(message, "base64").toString("utf-8"));
 }
 
-function cleanParsed(parsed) {
+function cleanParsedClaudeV2Response(parsed) {
     return parsed.completion.split("\n\n").map(s => s.trim());
 }
 
@@ -38,32 +39,27 @@ async function doPipeline(responses, responseStream) {
 }
 
 // bedrock: prep claude params
-function getInvokeParams(params, model, streaming) {
-    let wrapped = params;
-    if (model === "anthropic.claude-v2") {
-        wrapped.prompt = `\n\nHuman:${params.prompt}Assistant:`;
-    }
+function getInvokeParamsForClaudeV2(body) {
+    const modelParams = body.modelParams;
+    const prompt = `\n\nHuman:${modelParams.prompt}Assistant:`;
+    modelParams.prompt = prompt;
 
-    const output = {
-        "modelId": model,
-        "contentType": "application/json",
-        "accept": "*/*",
-        "body": JSON.stringify(wrapped)
-    };
-    if (streaming) {
-        output.responseStream = true;
+    const bedrockParams = body.bedrockParams;
+    bedrockParams.body = JSON.stringify(modelParams);
+
+    if (body.lambdaParams.isStreaming) {
+        bedrockParams.responseStream = true;
     }
-    return output;
+    return bedrockParams;
 }
 
 // bedrock: helpers
 async function doStreamingWithAnthropicSdk(body, responseStream) {
-    const anthropic = new AnthropicBedrock();
     const response = await anthropic.completions.create({
-        prompt: `${AnthropicBedrock.HUMAN_PROMPT} ${body.params.prompt} ${AnthropicBedrock.AI_PROMPT}`,
-        model: body.model,
-        stream: body.streaming,
-        max_tokens_to_sample: body.params.max_tokens_to_sample,
+        stream: body.lambdaParams.isStreaming,
+        model: body.bedrockParams.modelId,
+        max_tokens_to_sample: body.modelParams.max_tokens_to_sample,
+        prompt: `${AnthropicBedrock.HUMAN_PROMPT} ${body.modelParams.prompt} ${AnthropicBedrock.AI_PROMPT}`,
     });
     const chunks = [];
     for await (const chunk of response) {
@@ -72,6 +68,17 @@ async function doStreamingWithAnthropicSdk(body, responseStream) {
     }
     console.log(chunks.join(''));
     responseStream.end();
+}
+
+async function doInvokeWithAnthropicSdk(body, responseStream) {
+    const response = await client.completions.create({
+        model: body.bedrockParams.modelId,
+        max_tokens_to_sample: body.modelParams.max_tokens_to_sample,
+        prompt: `${AnthropicBedrock.HUMAN_PROMPT} ${body.modelParams.prompt} ${AnthropicBedrock.AI_PROMPT}`
+    });
+    const output = cleanParsedClaudeV2Response(parsed);
+    console.log(JSON.stringify(output));
+    doPipeline(output, responseStream);
 }
 
 async function doStreamingWithAwsSdk(params, responseStream) {
@@ -91,17 +98,17 @@ async function doInvokeWithAwsSdk(params, responseStream) {
     const command = new InvokeModelCommand(params);
     const response = await bedrock.send(command);
     const parsed = parseBase64(response.body);
-    const output = cleanParsed(parsed);
+    const output = cleanParsedClaudeV2Response(parsed);
     console.log(JSON.stringify(output));
     doPipeline(output, responseStream);
 }
 
 // bedrock: invoke model
 async function doBedrock(body, responseStream) {
-    const params = getInvokeParams(body.params, body.model, body.streaming);
+    const params = getInvokeParamsForClaudeV2(body);
     console.log(JSON.stringify(params));
-    if (body.streaming) {
-        if (body.anthropic) {
+    if (body.lambdaParams.isStreaming) {
+        if (body.lambdaParams.useAnthropicSdk) {
             await doStreamingWithAnthropicSdk(body, responseStream);
         } else {
             await doStreamingWithAwsSdk(params, responseStream);
@@ -114,9 +121,9 @@ async function doBedrock(body, responseStream) {
 export const handler = awslambda.streamifyResponse(async (event, responseStream, _context) => {
     console.log(JSON.stringify(event));
     const body = getBody(event);
-    if (body.handler === "bedrock") {
+    if (body.lambdaParams.handler === "bedrock") {
         await doBedrock(body, responseStream);
-    } else if (body.handler === "pipeline") {
+    } else if (body.lambdaParams.handler === "pipeline") {
         await doPipeline(body.message, responseStream);
     } else {
         await doLoop(body.message, responseStream);
