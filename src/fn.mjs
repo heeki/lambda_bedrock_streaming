@@ -114,7 +114,11 @@ async function doBedrock(body, responseStream) {
             await doStreamingWithAwsSdk(params, responseStream);
         }
     } else {
-        await doInvokeWithAwsSdk(params, responseStream);
+        if (body.lambdaParams.useAnthropicSdk) {
+            await doInvokeWithAnthropicSdk(body, responseStream);
+        } else {
+            await doInvokeWithAwsSdk(params, responseStream);
+        }
     }
 }
 
