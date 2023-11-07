@@ -81,7 +81,9 @@ async function doInvokeWithAnthropicSdk(body, responseStream) {
     doPipeline(output, responseStream);
 }
 
-async function doStreamingWithAwsSdk(params, responseStream) {
+async function doStreamingWithAwsSdk(body, responseStream) {
+    responseStream.write(body.modelParams.prompt);
+    const params = getInvokeParamsForClaudeV2(body);
     const command = new InvokeModelWithResponseStreamCommand(params);
     const response = await bedrock.send(command);
     const chunks = [];
@@ -94,7 +96,8 @@ async function doStreamingWithAwsSdk(params, responseStream) {
     responseStream.end();
 }
 
-async function doInvokeWithAwsSdk(params, responseStream) {
+async function doInvokeWithAwsSdk(body, responseStream) {
+    const params = getInvokeParamsForClaudeV2(body);
     const command = new InvokeModelCommand(params);
     const response = await bedrock.send(command);
     const parsed = parseBase64(response.body);
@@ -105,19 +108,18 @@ async function doInvokeWithAwsSdk(params, responseStream) {
 
 // bedrock: invoke model
 async function doBedrock(body, responseStream) {
-    const params = getInvokeParamsForClaudeV2(body);
-    console.log(JSON.stringify(params));
+    console.log(JSON.stringify(body));
     if (body.lambdaParams.isStreaming) {
         if (body.lambdaParams.useAnthropicSdk) {
             await doStreamingWithAnthropicSdk(body, responseStream);
         } else {
-            await doStreamingWithAwsSdk(params, responseStream);
+            await doStreamingWithAwsSdk(body, responseStream);
         }
     } else {
         if (body.lambdaParams.useAnthropicSdk) {
             await doInvokeWithAnthropicSdk(body, responseStream);
         } else {
-            await doInvokeWithAwsSdk(params, responseStream);
+            await doInvokeWithAwsSdk(body, responseStream);
         }
     }
 }
