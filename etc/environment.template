@@ -4,9 +4,10 @@ BUCKET=your-deployment-bucket
 
 P_FN_MEMORY=512
 P_FN_TIMEOUT=30
+P_BUCKET_ARN=your-bucket-arn-with-rag-resources
 LAMBDA_STACK=lambda-bedrock-streaming
 LAMBDA_TEMPLATE=iac/lambda.yaml
 LAMBDA_OUTPUT=iac/lambda_output.yaml
-LAMBDA_PARAMS="ParameterKey=pFnMemory,ParameterValue=${P_FN_MEMORY} ParameterKey=pFnTimeout,ParameterValue=${P_FN_TIMEOUT}"
+LAMBDA_PARAMS="ParameterKey=pFnMemory,ParameterValue=${P_FN_MEMORY} ParameterKey=pFnTimeout,ParameterValue=${P_FN_TIMEOUT} ParameterKey=pBucketArn,ParameterValue=${P_BUCKET_ARN}"
 O_FN=output-fn-id
 O_FURL=output-fn-url
