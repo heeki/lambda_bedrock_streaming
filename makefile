@@ -36,3 +36,6 @@ get.policy:
 
 list.models:
 	aws --profile ${PROFILE} bedrock list-foundation-models | jq -r -c '.modelSummaries[] | select(.responseStreamingSupported == true) | .modelArn'
+
+rag:
+	node src/rag.mjs --trace-warnings

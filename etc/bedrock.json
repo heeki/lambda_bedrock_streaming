@@ -11,9 +11,9 @@
     },
     "modelParams": {
         "max_tokens_to_sample": 2048,
-        "temperature": 0.5,
+        "temperature": 0.2,
         "top_k": 250,
         "top_p": 0.5,
-        "prompt": "Explain serverless to a 5th grader."
+        "prompt": "How much concurrency does AWS Lambda add per minute for Lambda functions subscribed to SQS queues?"
     }
 }
