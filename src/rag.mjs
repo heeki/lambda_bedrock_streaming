@@ -1,3 +1,5 @@
+import fs from "fs";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { PDFLoader } from "langchain/document_loaders/fs/pdf";
 import { S3Loader } from "langchain/document_loaders/web/s3";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -26,6 +28,11 @@ const VectorStoreType = {
     FAISS: "faiss",
     PINECONE: "pinecone"
 };
+
+// initialize aws clients
+const client = new S3Client({
+    region: process.env.AWS_REGION
+});
 
 // initialize constants
 const SOURCE_TYPE = SourceType.FS;
@@ -84,10 +91,24 @@ async function loadSource() {
     var loader;
     switch (SOURCE_TYPE) {
         case SourceType.FS:
-            loader = new PDFLoader("tmp/" + SOURCE_CONTEXT_FILE, {
+            const command = new GetObjectCommand({
+                Bucket: process.env.RAG_BUCKET,
+                Key: "rag/" + SOURCE_CONTEXT_FILE
+            });
+            const response = await client.send(command);
+            const localOutputFile = "/tmp/" + SOURCE_CONTEXT_FILE;
+            const inputStream = response.Body;
+            const outputStream = fs.createWriteStream(localOutputFile);
+            await new Promise((resolve, reject) => {
+                inputStream.pipe(outputStream)
+                    .on("error", err => reject(err))
+                    .on("close", () => resolve())
+            });
+            loader = new PDFLoader(localOutputFile, {
                 splitPages: false
             });
             break;
+        // TODO: this requires implementing a local Unstructured API endpoint as an extension
         case SourceType.S3:
             loader = new S3Loader({
                 bucket: process.env.RAG_BUCKET,
@@ -99,7 +120,7 @@ async function loadSource() {
                     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
                   },
                 },
-                unstructuredAPIURL: "http://localhost:8000/general/v1",
+                unstructuredAPIURL: "http://localhost:8000/general/v0/general",
                 unstructuredAPIKey: "U1x9U5qCFV1jed4iqXiy"
             });
             break;
