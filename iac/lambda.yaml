@@ -17,6 +17,14 @@ Parameters:
     Type: Number
   pBucketArn:
     Type: String
+  pPineconeApiKey:
+    Type: String
+  pPineconeEnvironment:
+    Type: String
+  pPineconeIndex:
+    Type: String
+  pRagSourceFile:
+    Type: String
 Resources:
   FnRole:
     Type: AWS::IAM::Role
@@ -92,6 +100,11 @@ Resources:
         Variables:
           POWERTOOLS_METRICS_NAMESPACE: LambdaBedrockStreaming
           POWERTOOLS_SERVICE_NAME: test
+          RAG_BUCKET: !Select ["5", !Split [":", !Ref pBucketArn]]
+          RAG_SOURCE_FILE: !Ref pRagSourceFile
+          PINECONE_API_KEY: !Ref pPineconeApiKey
+          PINECONE_ENVIRONMENT: !Ref pPineconeEnvironment
+          PINECONE_INDEX: !Ref pPineconeIndex
       Tags:
         application:group: generative-ai
         application:subgroup: bedrock

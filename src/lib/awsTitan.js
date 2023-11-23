@@ -16,33 +16,27 @@ import { formatDocumentsAsString } from "langchain/util/document";
 import { BedrockChat } from "langchain/chat_models/bedrock";
 import { ChatPromptTemplate, HumanMessagePromptTemplate, SystemMessagePromptTemplate } from "langchain/prompts";
 import { StringOutputParser } from "langchain/schema/output_parser";
-import { SourceType, VectorStoreType, parseBase64 } from "./lib/core.js";
-
-// reference
-// https://js.langchain.com/docs/modules/data_connection/text_embedding/how_to/caching_embeddings
+import { SourceType, VectorStoreType, parseBase64, doPipeline } from "./core.js";
 
 // initialize constants
 const SOURCE_TYPE = SourceType.FS;
 const VECTOR_STORE_TYPE = VectorStoreType.MEMORY;
 const CHUNK_SIZE = 512;
-const SOURCE_CONTEXT_FILE = "Introducing faster polling scale-up for AWS Lambda functions configured with Amazon SQS _ AWS Compute Blog.pdf";
-const QUESTION = "How much concurrency does AWS Lambda add per minute for Lambda functions subscribed to SQS queues? Explain this in detail.";
-// const SOURCE_CONTEXT_FILE = "Introducing advanced logging controls for AWS Lambda functions _ AWS Compute Blog.pdf";
-// const QUESTION = "Are there any recent logging enhancements for AWS Lambda?";
+const SOURCE_CONTEXT_FILE = process.env.RAG_SOURCE_FILE;
 
 // initialize aws clients
 const client = new S3Client({
-    region: process.env.AWS_REGION
+    // region: process.env.AWS_REGION
 });
 
 // initialize embeddings
 const embeddings = new BedrockEmbeddings({
     model: "amazon.titan-embed-text-v1",
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    }
+    // region: process.env.AWS_REGION,
+    // credentials: {
+    //   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    //   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    // }
 });
 
 // initialize stores
@@ -62,11 +56,11 @@ const cacheBackedEmbeddings = CacheBackedEmbeddings.fromBytesStore(
 // initialize model
 const model = new BedrockChat({
     model: "anthropic.claude-v2",
-    region: process.env.AWS_REGION,
-    credentials: {
-        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    },
+    // region: process.env.AWS_REGION,
+    // credentials: {
+    //     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    //     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    // },
     streaming: true,
     temperature: 0.2,
     maxTokens: 2048
@@ -129,6 +123,7 @@ async function createVectorStore(documents) {
     var vectorStore;
     let start = Date.now();
     switch(VECTOR_STORE_TYPE) {
+        // TODO: issue with faiss and need to add linux libraries via layer
         case VectorStoreType.FAISS:
             vectorStore = await FaissStore.fromDocuments(documents, cacheBackedEmbeddings);
             break;
@@ -167,8 +162,28 @@ async function createPromptEmbeddings(prompt) {
     return parsed;
 }
 
-// query embeddings model
-async function askQuestionInContext(question) {
+// initialize embedding cache
+async function initializeVectorCache() {
+    const raw = await loadSource();
+    console.log(raw);
+
+    // split document into smaller chunks
+    const documents = await splitDocument(raw);
+    console.log(documents);
+
+    // create vector store from split documents
+    const vectorStore = await createVectorStore(documents);
+    const vectorStoreRetriever = vectorStore.asRetriever();
+    const keys = [];
+    for await (const key of inMemoryStore.yieldKeys()) {
+        keys.push(key);
+    }
+    console.log(keys.slice(0, 5));
+    return vectorStoreRetriever;
+}
+
+async function invokeWithVectorContext(question, vectorStoreRetriever, responseStream) {
+    // setup runnable chain for queries
     const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
     If you don't know the answer, just say that you don't know, don't try to make up an answer.
     ----------------
@@ -188,32 +203,14 @@ async function askQuestionInContext(question) {
         new StringOutputParser()
     ]);
     const stream = await chain.stream(question);
-    return stream;
+    for await (const chunk of stream) {
+        console.log(chunk);
+        responseStream.write(chunk);
+    }
+    responseStream.end();
 }
 
-// main: get source data (pdf file)
-const raw = await loadSource();
-// console.log(raw);
-
-// main: split document into smaller chunks
-const documents = await splitDocument(raw);
-console.log(documents);
-
-// main: create vector store from split documents
-const vectorStore = await createVectorStore(documents);
-const vectorStoreRetriever = vectorStore.asRetriever();
-const keys = [];
-for await (const key of inMemoryStore.yieldKeys()) {
-    keys.push(key);
+export {
+    initializeVectorCache,
+    invokeWithVectorContext
 }
-console.log(keys.slice(0, 5));
-
-// main: query vector database with a question
-const result = await askQuestionInContext(QUESTION);
-for await (const chunk of result) {
-    console.log(chunk);
-}
-
-// test
-// const testing = await vectorStore.similaritySearch("concurrency per minute", 1);
-// console.log(testing);

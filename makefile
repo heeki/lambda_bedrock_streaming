@@ -1,6 +1,9 @@
 include etc/environment.sh
 
 lambda: lambda.package lambda.deploy
+lambda.build:
+	sam build -t ${LAMBDA_TEMPLATE} --parameter-overrides ${LAMBDA_PARAMS} --build-dir build --manifest src/package.json --use-container
+	sam package -t build/template.yaml --region ${REGION} --output-template-file ${LAMBDA_OUTPUT} --s3-bucket ${BUCKET} --s3-prefix ${LAMBDA_STACK}
 lambda.package:
 	sam package -t ${LAMBDA_TEMPLATE} --region ${REGION} --output-template-file ${LAMBDA_OUTPUT} --s3-bucket ${BUCKET} --s3-prefix ${LAMBDA_STACK}
 lambda.deploy:

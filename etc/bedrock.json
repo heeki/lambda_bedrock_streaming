@@ -1,7 +1,7 @@
 {
     "lambdaParams": {
         "isStreaming": true,
-        "sdk": "aws"
+        "sdk": "awsClaude"
     },
     "bedrockParams": {
         "modelId": "anthropic.claude-v2",
@@ -13,6 +13,6 @@
         "temperature": 0.2,
         "top_k": 250,
         "top_p": 0.5,
-        "prompt": "How much concurrency does AWS Lambda add per minute for Lambda functions subscribed to SQS queues?"
+        "prompt": "How much concurrency does AWS Lambda add per minute for Lambda functions subscribed to SQS queues? Explain this in detail."
     }
 }

@@ -5,9 +5,27 @@ import util from "util";
 const { Readable } = stream;
 const pipeline = util.promisify(stream.pipeline);
 
+// initialize enums
+const SourceType = {
+    FS: "fs",
+    S3: "s3"
+};
+const VectorStoreType = {
+    FAISS: "faiss",
+    MEMORY: "memory",
+    PINECONE: "pinecone"
+};
+
 // convert base64 to string
 function parseBase64(message) {
     return JSON.parse(Buffer.from(message, "base64").toString("utf-8"));
+}
+
+// extract body from event payload
+function getBody(event) {
+    let body = event.isBase64Encoded ? parseBase64(event.body) : event.body;
+    console.log(JSON.stringify(body));
+    return body;
 }
 
 // split string by newline and trim whitespaces
@@ -31,7 +49,10 @@ async function doPipeline(responses, responseStream) {
 }
 
 export {
+    SourceType,
+    VectorStoreType,
     parseBase64,
+    getBody,
     cleanResponse,
     doLoop,
     doPipeline
