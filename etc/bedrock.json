@@ -1,8 +1,7 @@
 {
     "lambdaParams": {
-        "handler": "bedrock",
         "isStreaming": true,
-        "useAnthropicSdk": false
+        "sdk": "aws"
     },
     "bedrockParams": {
         "modelId": "anthropic.claude-v2",
