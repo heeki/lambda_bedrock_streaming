@@ -2,12 +2,21 @@ PROFILE=your-cli-profile
 REGION=us-east-1
 BUCKET=your-deployment-bucket
 
-P_FN_MEMORY=512
-P_FN_TIMEOUT=30
+export PINECONE_API_KEY=your-pinecone-api-key-if-using-pinecone
+export PINECONE_ENVIRONMENT=your-pinecone-environment
+export PINECONE_INDEX=your-pinecone-index
+
+P_FN_MEMORY=256
+P_FN_TIMEOUT=60
 P_BUCKET_ARN=your-bucket-arn-with-rag-resources
+P_RAG_SOURCE_FILE=your-rag-source-file-in-the-bucket-referenced-above
 LAMBDA_STACK=lambda-bedrock-streaming
 LAMBDA_TEMPLATE=iac/lambda.yaml
 LAMBDA_OUTPUT=iac/lambda_output.yaml
 LAMBDA_PARAMS="ParameterKey=pFnMemory,ParameterValue=${P_FN_MEMORY} ParameterKey=pFnTimeout,ParameterValue=${P_FN_TIMEOUT} ParameterKey=pBucketArn,ParameterValue=${P_BUCKET_ARN}"
 O_FN=output-fn-id
 O_FURL=output-fn-url
+
+export AWS_REGION=${REGION}
+export RAG_BUCKET=your-rag-assets-bucket
+export RAG_SOURCE_FILE=${P_RAG_SOURCE_FILE}

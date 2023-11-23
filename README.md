@@ -1,5 +1,5 @@
 ## Overview
-This repository implemented a Lambda function URL with streaming responses from Bedrock. The code implements the Anthropic Claude v2 model specifically, as the model has particular parameters and schema expectations.
+This repository implemented a Lambda function URL with streaming responses from Bedrock. The code implements the Anthropic Claude v2 model and the Amazon Titan Embeddings G1 text model.
 
 ## Pre-requisites
 Copy `etc/environment.template` to `etc/environment.sh` and update accordingly.
@@ -20,12 +20,8 @@ After completing the deployment, capture the following outputs in your `etc/envi
 
 ## Configuration
 The `etc/bedrock.json` event payload file has been setup to simplify invocation of the Bedrock API while giving you flexibility to try different code paths.
-* `lambdaParams.handler`:
-    * `bedrock`: invokes the Bedrock API
-    * `pipeline`: uses `stream.pipeline` to stream responses
-    * `helloworld`: any other value will use a loop with a 50 ms delay between each iteration
 * `lambdaParams.isStreaming`: `true | false`
-* `lambdaParams.useAnthropicSdk`: `true | false`
+* `lambdaParams.sdk`: `anthropicClaude | awsClaude | awsTitan`
 * `modelParams.prompt`: update this to whatever prompt you want to initially use
 
 ## Testing
