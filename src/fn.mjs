@@ -1,7 +1,7 @@
 import { invokeWithAnthropicSdk } from "./lib/anthropicClaude.js";
 import { invokeWithAwsSdk } from "./lib/awsClaude.js";
 import { initializeVectorCache, invokeWithVectorContext } from "./lib/awsTitan.js";
-import { getBody } from "./lib/core.js";
+import { doLoop, getBody } from "./lib/core.js";
 
 const vectorStoreRetriever = await initializeVectorCache();
 
@@ -9,6 +9,9 @@ export const handler = awslambda.streamifyResponse(async (event, responseStream,
     console.log(JSON.stringify(event));
     const body = getBody(event);
     switch (body.lambdaParams.sdk) {
+        case "helloworld":
+            await doLoop(body.message, body.lambdaParams.pauseMs, responseStream);
+            break;
         case "anthropicClaude":
             await invokeWithAnthropicSdk(body, responseStream);
             break;

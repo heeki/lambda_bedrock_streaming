@@ -34,10 +34,10 @@ function cleanResponse(response) {
 }
 
 // lambda: handle response streaming with a loop
-async function doLoop(responses, responseStream) {
+async function doLoop(responses, pauseMs, responseStream) {
     for (let i in responses) {
         responseStream.write(`${responses[i]}\n`);
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise(resolve => setTimeout(resolve, pauseMs));
     }
     responseStream.end();
 }
