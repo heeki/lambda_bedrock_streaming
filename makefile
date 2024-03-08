@@ -29,6 +29,10 @@ curl.auth:
 	curl -s -XPOST -d @etc/streaming.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 curl.bedrock:
 	curl -s -XPOST -d @etc/bedrock.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+curl.bedrock.claude:
+	curl -s -XPOST -d @etc/bedrock_claude.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+curl.bedrock.titan:
+	curl -s -XPOST -d @etc/bedrock_titan.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 
 get.configuration:
 	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq
