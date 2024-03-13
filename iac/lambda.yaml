@@ -114,6 +114,13 @@ Resources:
     Properties:
       LogGroupName: !Sub '/aws/lambda/${Fn}'
       RetentionInDays: 7
+  FnPerms:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Fn
+      FunctionUrlAuthType: AWS_IAM
+      Action: lambda:InvokeFunctionUrl
+      Principal: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
 Outputs:
   outFn:
     Value: !Ref Fn
