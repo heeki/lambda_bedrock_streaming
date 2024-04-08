@@ -1,6 +1,6 @@
 {
     "lambdaParams": {
-        "isStreaming": true,
+        "isStreaming": false,
         "sdk": "awsClaude"
     },
     "bedrockParams": {
