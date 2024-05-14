@@ -7,6 +7,7 @@ tmp
 # files
 etc/bedrock_*.json
 etc/event.json
+etc/event_*.json
 etc/*.sh
 iac/*_output.yaml
 build.toml

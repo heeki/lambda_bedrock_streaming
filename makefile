@@ -18,6 +18,12 @@ lambda.invoke.sync:
 lambda.invoke.async:
 	aws --profile ${PROFILE} lambda invoke --function-name ${O_FN} --invocation-type Event --payload file://etc/event.json --cli-binary-format raw-in-base64-out --log-type Tail tmp/fn.json | jq "."
 
+cloudfront: cloudfront.package cloudfront.deploy
+cloudfront.package:
+	sam package -t ${CLOUDFRONT_TEMPLATE} --region ${REGION} --output-template-file ${CLOUDFRONT_OUTPUT} --s3-bucket ${BUCKET} --s3-prefix ${CLOUDFRONT_STACK}
+cloudfront.deploy:
+	sam deploy -t ${CLOUDFRONT_OUTPUT} --region ${REGION} --stack-name ${CLOUDFRONT_STACK} --parameter-overrides ${CLOUDFRONT_PARAMS} --capabilities CAPABILITY_NAMED_IAM
+
 iam.assumerole:
 	aws --profile ${PROFILE} sts assume-role --role-arn ${O_CLIENT_ROLE} --role-session-name furl | tee tmp/credentials.json | jq
 
@@ -33,6 +39,8 @@ curl.bedrock.claude:
 	curl -s -XPOST -d @etc/bedrock_claude.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 curl.bedrock.titan:
 	curl -s -XPOST -d @etc/bedrock_titan.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
+curl.cloudfront:
+	curl -s -XPOST -d @etc/streaming.json ${O_DISTRIBUTION_URL} --no-buffer
 
 get.configuration:
 	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq

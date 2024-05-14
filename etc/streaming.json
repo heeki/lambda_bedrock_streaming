@@ -1,7 +1,7 @@
 {
     "lambdaParams": {
         "sdk": "helloworld",
-        "pauseMs": 2000
+        "pauseMs": 50
     },
     "message": [
         "████████╗██╗░░██╗██╗░██████╗  ██╗░██████╗  ░█████╗░",

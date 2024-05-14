@@ -1,5 +1,5 @@
 ## Overview
-This repository implemented a Lambda function URL with streaming responses from Bedrock. The code implements the Anthropic Claude v2 model and the Amazon Titan Embeddings G1 text model.
+This repository implemented a Lambda function URL with streaming responses from Bedrock. The code implements the Anthropic Claude v2 model and the Amazon Titan Embeddings G1 text model. A CloudFront distribution is also added to front the Lambda function URL, which subsequently uses a Lambda@Edge function to sign requests from CloudFront to Lambda.
 
 ## Pre-requisites
 Copy `etc/environment.template` to `etc/environment.sh` and update accordingly.
@@ -10,13 +10,25 @@ Copy `etc/environment.template` to `etc/environment.sh` and update accordingly.
 For the Lambda stack, update the following accordingly.
 * `P_FN_MEMORY`: amount of memory in MB for the Lambda function
 * `P_FN_TIMEOUT`: timeout in seconds for the Lambda function
+* `P_BUCKET_ARN`: bucket arn for rag resources
+* `P_RAG_SOURCE_FILE`: example document for rag
+
+For the CloudFront stack, update the following accordingly.
+* `P_EDGE_MEMORY`: amount of memory in MB for the Lambda function
+* `P_EDGE_TIMEOUT`: timeout in seconds for the Lambda function
 
 ## Deployment
-To deploy the stack, run the following command: `make lambda`.
+To deploy the Lambda stack, run the following command: `make lambda`.
 
 After completing the deployment, capture the following outputs in your `etc/environment.sh` file.
 * `O_FN`: output function name
 * `O_FURL`: output function url fqdn
+
+To deploy the CloudFront stack, run the following command: `make cloudfront`.
+
+After completing the deployment, capture the following outputs in your `etc/environment.sh` file.
+* `O_EDGEFN`: output edge function name
+* `O_DISTRIBUTION_URL`: output cloudfront distribution url fqdn
 
 ## Configuration
 The `etc/bedrock.json` event payload file has been setup to simplify invocation of the Bedrock API while giving you flexibility to try different code paths.
