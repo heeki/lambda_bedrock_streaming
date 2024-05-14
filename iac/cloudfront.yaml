@@ -58,6 +58,14 @@ Resources:
               LambdaFunctionARN: !Ref EdgeFn.Version
           TargetOriginId: furl
           ViewerProtocolPolicy: redirect-to-https
+  FnPerms:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref pFnArn
+      FunctionUrlAuthType: AWS_IAM
+      Action: lambda:InvokeFunctionUrl
+      Principal: cloudfront.amazonaws.com
+      SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
   EdgeFnRole:
     Type: AWS::IAM::Role
     Properties:

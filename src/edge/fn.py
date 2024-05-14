@@ -24,7 +24,7 @@ def sign_request(request):
     headers = {v[0]['key']:v[0]['value'] for k,v in headers.items()}
     headers.pop('X-Forwarded-For')
     # prep data for signing the request
-    data = base64.b64decode(request['body']['data']) if method == "POST" and "body" in request else None
+    data = base64.b64decode(request['body']['data']) if "body" in request else None
     # sign the request
     req = AWSRequest(method=method, url=url, params=None, headers=headers, data=data)
     SigV4Auth(credentials, 'lambda', region).add_auth(req)
