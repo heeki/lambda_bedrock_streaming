@@ -41,6 +41,8 @@ curl.bedrock.titan:
 	curl -s -XPOST -d @etc/bedrock_titan.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 curl.cloudfront:
 	curl -s -XPOST -d @etc/streaming.json ${O_DISTRIBUTION_URL} --no-buffer
+curl.simple:
+	curl -s -XPOST -d @etc/simple.json ${O_FURL} --netrc --aws-sigv4 aws:amz:${REGION}:lambda --no-buffer
 
 get.configuration:
 	aws --profile ${PROFILE} lambda get-function-configuration --function-name ${O_FN} | jq

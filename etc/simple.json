@@ -1,0 +1,7 @@
+{
+    "max_tokens_to_sample": 2048,
+    "temperature": 0.2,
+    "top_k": 250,
+    "top_p": 0.5,
+    "prompt": "Explain the scaling behavior of AWS Lambda functions when SQS is the event source."
+}

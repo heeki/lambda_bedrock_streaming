@@ -90,7 +90,8 @@ Resources:
   Fn:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ../src/bedrock
+      # CodeUri: ../src/bedrock
+      CodeUri: ../src/simple
       Handler: fn.handler
       Role: !GetAtt FnRole.Arn
       FunctionUrlConfig:
